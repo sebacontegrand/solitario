@@ -268,7 +268,7 @@ const JuegoSolitario = () => {
               style={{ minHeight: "100px" }}
             >
               <Image
-                className="absolute top-20 left-40 border-2 rounded-md"
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2 rounded-md"
                 src={`/assets/img/${cardFollows.card}.png`}
                 alt={cardFollows.card}
                 width={100}

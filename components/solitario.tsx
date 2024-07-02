@@ -2,8 +2,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import fondo from "../public/assets/img/fondo.png";
-import { traceDeprecation } from "process";
-import { setDefaultResultOrder } from "dns";
 
 const JuegoSolitario = () => {
   let mazoSolitario: string[] = [
@@ -82,6 +80,12 @@ const JuegoSolitario = () => {
       cardFollows: { card: string; index: number } | null;
     }[]
   >([]);
+  const [allowedTypes, setAllowedTypes] = useState({
+    "0-11": null,
+    "12-23": null,
+    "24-35": null,
+    "36-48": null,
+  });
 
   console.log("%c Line:80 🌮 history", "color:#4fff4B", history);
   console.log("%c Line:68 🍺 shuffledMazo", "color:#f5ce50", shuffledMazo);
@@ -124,6 +128,11 @@ const JuegoSolitario = () => {
         ...prevHistory,
         { shuffledMazo: newMazo, cardFollows },
       ]);
+      const rangeKey = getRangeKey(targetIndex);
+      if (rangeKey === null) {
+        alert("Invalid drop location.");
+        return;
+      }
       if (initialDrag) {
         newMazo[draggedCard.index] = "";
         setInitialDrag(false);
@@ -131,6 +140,18 @@ const JuegoSolitario = () => {
         for (let i = 0; i < flippedCards.length; i++) {
           newMazo[draggedCard.index] = flippedCards[i - 1];
         }
+      }
+
+      const draggedCardLetter = draggedCard.card.slice(-1);
+
+      if (allowedTypes[rangeKey] === null) {
+        setAllowedTypes((prevTypes) => ({
+          ...prevTypes,
+          [rangeKey]: draggedCardLetter,
+        }));
+      } else if (allowedTypes[rangeKey] !== draggedCardLetter) {
+        alert(`Lugar incorrecto`);
+        return;
       }
       if (targetCard === "") {
         alert("you lost!");
@@ -147,68 +168,35 @@ const JuegoSolitario = () => {
       setDraggedCard(null);
     }
   };
+  const getRangeKey = (index: number) => {
+    if (index >= 0 && index <= 11) return "0-11";
+    if (index >= 12 && index <= 23) return "12-23";
+    if (index >= 24 && index <= 35) return "24-35";
+    if (index >= 36 && index <= 48) return "36-48";
+    return null;
+  };
   if (flippedCards.length === 48) {
     alert("you won!");
+    return;
   }
 
   return (
     <>
       <header className="bg-blue-300 p-2">
         <button
-          onClick={() => setPlay(!play)}
+          onClick={() => {
+            setPlay(!play);
+            setFlippedCards([]);
+            setDraggedCard(null);
+            setCardFollows(null);
+            setShuffledMazo(mazoMezclado(mazoSolitario));
+          }}
           className="bg-blue-500 rounded-lg p-2 mx-2 my-2 shadow-md "
         >
-          Iniciar
+          Solitario
         </button>
-        {/* {history.length > 0 && (
-          <button
-            onClick={handleUndo}
-            className="bg-red-500 rounded-lg p-2 mx-2 my-2 shadow-md"
-          >
-            Undo
-          </button>
-        )} */}
       </header>
-      <main className="bg-blue-950 rounded-md">
-        <div className="relative w-[400px] h-[300px] bg-blue-950">
-          <div
-            className={`absolute`}
-            style={{ left: `${10}px`, top: `${5}px` }}
-          >
-            <Image
-              className="border-2 rounded-md"
-              src={fondo}
-              alt={"Image 1"}
-              width={100}
-              height={100}
-            />
-          </div>
-          <div
-            className={`absolute`}
-            style={{ left: `${15}px`, top: `${10}px` }}
-          >
-            <Image
-              className="border-2 rounded-md"
-              src={fondo}
-              alt={"Image 2"}
-              width={100}
-              height={100}
-            />
-          </div>
-          <div
-            className={`absolute`}
-            style={{ left: `${20}px`, top: `${15}px` }}
-          >
-            <Image
-              className="border-2 rounded-md"
-              src={fondo}
-              alt={"Image 2"}
-              width={100}
-              height={100}
-            />
-          </div>
-        </div>
-
+      <main>
         {play && (
           <div className="grid grid-cols-12 gap-2 mb-2">
             {Array.from({ length: 12 }, (_, i) => (
@@ -245,8 +233,8 @@ const JuegoSolitario = () => {
                             : fondo
                         }
                         alt={card}
-                        width={135}
-                        height={135}
+                        width={130}
+                        height={130}
                       />
                     </>
                   )}
@@ -257,7 +245,7 @@ const JuegoSolitario = () => {
           {cardFollows && (
             <div
               key={`follow-${cardFollows.index}`}
-              className="m-2 border-2 rounded-md"
+              className="absolute top-4/5 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2 rounded-md"
               onClick={() => handleCardClick(cardFollows.card)}
               draggable={true}
               onDragStart={() =>
@@ -268,11 +256,11 @@ const JuegoSolitario = () => {
               style={{ minHeight: "100px" }}
             >
               <Image
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2 rounded-md"
+                className="m-2 border-2 rounded-md"
                 src={`/assets/img/${cardFollows.card}.png`}
                 alt={cardFollows.card}
-                width={100}
-                height={100}
+                width={160}
+                height={160}
               />
             </div>
           )}
